@@ -3,10 +3,10 @@ import struct
 import re
 
 # The directory containing your files
-directory = "mission02"
+directory = "mission07"
 
 # The name of the .dat file to save
-dat_filename = f"{directory}edited.dat"
+dat_filename = f"{directory}.dat"
 
 
 def gather_files(directory):

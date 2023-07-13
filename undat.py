@@ -2,6 +2,7 @@ import os
 import struct
 import re
 from colorama import Fore, init
+import time
 
 EXTENSION_MAP = {
     "56657273": {"prefix": "PhysicsVehicle"},
@@ -14,6 +15,33 @@ EXTENSION_MAP = {
     "4c4d4246": {"prefix": "ObjectNames"},
     "2f2f4330": {"prefix": "REFX"},
     "0d0a2f2f": {"prefix": "REFX_DETAIL"},
+    "466f6c65": {"prefix": "Foley"},
+    "42726164": {"prefix": "Bradley"},
+    "4369765f": {"prefix": "VehcilesRelated"},
+    "4330345f": {"prefix": "ObjectsRelated"},
+    "302c4272": {"prefix": "SoldiersSkills"},
+}
+
+EXTENSION_CONTENT_MAP = {
+    "Kerned Pairs": {"prefix": "FontsMaybe", "dir": "txt"},
+    "COL_Soldier,TR_WPN_AK47,WEAPON,0": {"prefix": "DefaultWeapons", "dir": "txt"},
+    "TR_VEH_ZSU_232_AA_Gun C04_AAGunZU232 C04_AAGunZU232_DEAD": {
+        "prefix": "VehiclesConnectors",
+        "dir": "txt",
+    },
+    "TR_WPN_NORINCO_QBZ_97,-1,C04_Rifle_CHIN_NorincoQBZ97": {
+        "prefix": "WeaponsConnectors",
+        "dir": "txt",
+    },
+    "RamirezSkin": {"prefix": "Connors", "dir": "txt"},
+    "JonesSkin": {"prefix": "Jones"},
+    "Rookie,0,1.00": {"prefix": "Difficluties", "dir": "txt"},
+    "MediKit,MEDI KIT,C04_MediKit": {"prefix": "ItemsConnectors", "dir": "txt"},
+    "US_50cal_Heavy_machine_gun,US_WPN_Browning_50Cal,WEAPON": {
+        "prefix": "VehiclesWeapons",
+        "dir": "txt",
+    },
+    "Wheels,Wheels,Truck.sbk": {"prefix": "SoundPacks", "dir": "txt"},
 }
 
 init()
@@ -58,6 +86,9 @@ for file in files:
             filename_prefix = ""  # Initialize to an empty string
 
             # Get extension and directory
+            f.seek(offset)
+            data = f.read(size)
+
             if ext == b"DDS ":
                 dir_ext = "dds"
             elif ext == b"EOBJ":
@@ -74,6 +105,7 @@ for file in files:
                 dir_ext = "bmp"
             elif (
                 (ext[0:1].hex() > "47" and ext[0:1].hex() < "58")
+                or EXTENSION_MAP.get(ext.hex())
                 or ext == b"Vers"
                 or ext[:2] == b"//"
                 or ext[:2] == b"\r\n"
@@ -81,34 +113,42 @@ for file in files:
             ):
                 # print(f"{Fore.RED} ext: {ext.hex()} {Fore.RESET}")
                 dir_ext = "txt"
+
             else:
-                # print(ext)
-                dir_ext = "unknown"
+                try:
+                    data.decode("ascii")
+                    dir_ext = "unknownreadable"
+                except UnicodeDecodeError:
+                    dir_ext = "unknown"
 
             prefix = ""  # Initialize prefix as an empty string
 
-            f.seek(offset)
-            data = f.read(size)
-
             # Determine prefix based on extension
+            decoded_data = data.decode("utf-8", errors="ignore")
             for extension, map_data in EXTENSION_MAP.items():
                 if ext.hex() == extension:
                     prefix = map_data["prefix"]
                     if prefix == "PhysicsVehicle":
-                        if "HLOU" in data.decode("utf-8", errors="ignore"):
+                        if "HLOU" in decoded_data:
                             prefix = "Map"
-                        elif "ENVSND" in data.decode("utf-8", errors="ignore"):
+                        elif "ENVSND" in decoded_data:
                             prefix = "EnvironmentSounds"
-                        elif "ENVFOGSETTING" in data.decode("utf-8", errors="ignore"):
+                        elif "ENVFOGSETTING" in decoded_data:
                             prefix = "LightingSettings"
-                        elif "EMOVIES" in data.decode("utf-8", errors="ignore"):
+                        elif "EMOVIES" in decoded_data:
                             prefix = "Cutscenes"
-                        elif "Version 8" in data.decode("utf-8", errors="ignore"):
+                        elif "Version 8" in decoded_data:
                             prefix = "Textures"
 
-            # If prefix isn't determined, set it as 'NoPrefix'
-            if prefix == "":
-                prefix = "NoPrefix"
+            for content_to_be_checked, map_data in EXTENSION_CONTENT_MAP.items():
+                if content_to_be_checked in decoded_data:
+                    prefix = map_data["prefix"]
+                    if map_data.get("dir"):
+                        dir_ext: str = map_data.get("dir")  # type: ignore
+
+            # # If prefix isn't determined, set it as 'NoPrefix'
+            # if prefix == "":
+            #     prefix = "NoPrefix"
 
             # Create subdirectory for this prefix if it doesn't exist
             prefix_dir = os.path.join(parent_dir, dir_ext, prefix)
@@ -121,14 +161,11 @@ for file in files:
                 filename = "".join(re.findall(r"\w+", raw_filename)) + "." + hash_
             else:
                 filename = (
-                    f"{filename_prefix}_{hash_}.{loop//12}"
-                    if filename_prefix
-                    else f"{hash_}.{loop//12}"
+                    f"{filename_prefix}_{hash_}" if filename_prefix else f"{hash_}"
                 )
 
             # Process character animation files
             if prefix == "CharacterAnimations":  # type: ignore
-                decoded_data = data.decode("utf-8", errors="ignore")
                 lines = decoded_data.split("\n")
                 if len(lines) > 0:
                     animation_name_line = lines[0].strip()
