@@ -33,7 +33,7 @@ EXTENSION_CONTENT_MAP = {
         "prefix": "WeaponsConnectors",
         "dir": "txt",
     },
-    "RamirezSkin": {"prefix": "Connors", "dir": "txt"},
+    "RamirezSkin": {"prefix": "Conners", "dir": "txt"},
     "JonesSkin": {"prefix": "Jones"},
     "Rookie,0,1.00": {"prefix": "Difficluties", "dir": "txt"},
     "MediKit,MEDI KIT,C04_MediKit": {"prefix": "ItemsConnectors", "dir": "txt"},
