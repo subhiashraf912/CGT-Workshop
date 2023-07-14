@@ -3,7 +3,7 @@ import struct
 import re
 
 # The directory containing your files
-directory = "mission07"
+directory = "mission02"
 
 # The name of the .dat file to save
 dat_filename = f"{directory}.dat"

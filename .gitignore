@@ -2,3 +2,6 @@
 /mission14.dffat
 /original-files
 mission*/
+mission*
+catalog*
+__pycache__
