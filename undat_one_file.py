@@ -116,9 +116,9 @@ with open(file, "rb") as f:
         else:
             try:
                 data.decode("ascii")
-                dir_ext = "unknown-readable"
+                dir_ext = "unsorted-readable"
             except UnicodeDecodeError:
-                dir_ext = "unknown"
+                dir_ext = "unsorted"
 
         # Create subdirectory for this prefix if it doesn't exist
         prefix_dir = os.path.join(parent_dir, dir_ext)
